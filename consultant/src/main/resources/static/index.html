@@ -1,0 +1,1357 @@
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>侣行-您的智能出行管家</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/vue@3.2.31/dist/vue.global.min.js"></script>
+    <script type="text/javascript" src="https://webapi.amap.com/maps?v=1.4.15&key=9987e38d14aa093d3589f3102c562245"></script>
+    <style>
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+        }
+
+        /* 滚动条样式 */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8;
+        }
+
+        /* 输入框自适应高度 */
+        textarea {
+            min-height: 24px;
+            max-height: 200px;
+            transition: height 0.2s;
+        }
+
+        /* 加载动画 */
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 0.5;
+            }
+            50% {
+                opacity: 1;
+            }
+        }
+
+        .animate-pulse {
+            animation: pulse 1.5s infinite;
+        }
+
+        .delay-100 {
+            animation-delay: 0.1s;
+        }
+
+        .delay-200 {
+            animation-delay: 0.2s;
+        }
+
+        /* 打字机效果 */
+        .typing-cursor::after {
+            content: "|";
+            animation: blink 1s step-end infinite;
+        }
+
+        @keyframes blink {
+            from, to {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0;
+            }
+        }
+
+        /* 豆包风格设计 */
+        .sidebar {
+            width: 260px;
+            background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+            border-right: 1px solid #e2e8f0;
+        }
+
+        .dark .sidebar {
+            background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+            border-right: 1px solid #334155;
+        }
+
+        .chat-list-item {
+            border-radius: 12px;
+            transition: all 0.2s ease;
+        }
+
+        .chat-list-item:hover {
+            background-color: #e2e8f0;
+        }
+
+        .dark .chat-list-item:hover {
+            background-color: #334155;
+        }
+
+        .chat-list-item.active {
+            background-color: #dbeafe;
+        }
+
+        .dark .chat-list-item.active {
+            background-color: #1e3a8a;
+        }
+
+        .main-content {
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+        }
+
+        .dark .main-content {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+        }
+
+        .message-user {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            border-radius: 18px 4px 18px 18px;
+            box-shadow: 0 2px 6px rgba(59, 130, 246, 0.2);
+        }
+
+        .dark .message-user {
+            box-shadow: 0 2px 6px rgba(37, 99, 235, 0.3);
+        }
+
+        .message-assistant {
+            background: white;
+            border-radius: 4px 18px 18px 18px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+            border: 1px solid #e2e8f0;
+        }
+
+        .dark .message-assistant {
+            background: #1e293b;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+            border: 1px solid #334155;
+        }
+
+        .input-container {
+            background: white;
+            border-radius: 24px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            border: 1px solid #e2e8f0;
+        }
+
+        .dark .input-container {
+            background: #1e293b;
+            border: 1px solid #334155;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .send-button {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            transition: all 0.2s ease;
+        }
+
+        .send-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+
+        .avatar-assistant {
+            background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%);
+            box-shadow: 0 2px 6px rgba(139, 92, 246, 0.2);
+        }
+
+        .avatar-user {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            box-shadow: 0 2px 6px rgba(59, 130, 246, 0.2);
+        }
+
+        .welcome-card {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+            border: 1px solid #e2e8f0;
+        }
+
+        .dark .welcome-card {
+            background: #1e293b;
+            border: 1px solid #334155;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .feature-card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+            border: 1px solid #e2e8f0;
+            transition: all 0.2s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+        }
+
+        .dark .feature-card {
+            background: #334155;
+            border: 1px solid #475569;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .dark .feature-card:hover {
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+        }
+
+        .capability-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        /* 路况面板样式 */
+        .traffic-panel {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 400px;
+            max-width: 90vw;
+            z-index: 1000;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+            border: 1px solid #e2e8f0;
+        }
+
+        .dark .traffic-panel {
+            background: #1e293b;
+            border: 1px solid #334155;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        /* 天气面板样式 */
+        .weather-panel {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 400px;
+            max-width: 90vw;
+            z-index: 1000;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+            border: 1px solid #e2e8f0;
+        }
+
+        .dark .weather-panel {
+            background: #1e293b;
+            border: 1px solid #334155;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        /* 天气图标 */
+        .weather-icon {
+            font-size: 3rem;
+            margin-bottom: 10px;
+        }
+
+        /* 地图容器样式 */
+        #traffic-map-container {
+            width: 100%;
+            height: 300px;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body>
+<div id="app" class="flex h-screen bg-gray-50">
+    <!-- 侧边栏 -->
+    <div class="sidebar flex flex-col h-full p-4">
+        <div class="flex items-center mb-6">
+            <div class="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+                <i class="fas fa-compass mr-2"></i>侣行
+            </div>
+        </div>
+
+        <button @click="startNewConversation"
+                class="flex items-center justify-center w-full py-3 mb-4 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:from-blue-600 hover:to-indigo-600 transition-all">
+            <i class="fas fa-plus mr-2"></i>新建对话
+        </button>
+
+        <!-- 出行工具 -->
+        <div class="mb-4">
+            <div class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2 px-2">
+                出行工具
+            </div>
+            <div class="flex space-x-2 mb-4">
+                <button @click="toggleTrafficPanel"
+                        :class="['flex-1 flex items-center justify-center py-2 rounded-lg text-sm',
+                                showTrafficPanel ? 'bg-blue-500 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300']">
+                    <i class="fas fa-traffic-light mr-2"></i>路况
+                </button>
+                <button @click="toggleWeatherPanel"
+                        :class="['flex-1 flex items-center justify-center py-2 rounded-lg text-sm',
+                                showWeatherPanel ? 'bg-blue-500 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300']">
+                    <i class="fas fa-cloud-sun mr-2"></i>天气
+                </button>
+            </div>
+        </div>
+
+        <div class="flex-1 overflow-y-auto">
+            <div class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2 px-2">
+                历史对话
+            </div>
+            <div v-for="(chat, index) in chatHistory" :key="index"
+                 @click="loadChat(chat.id)"
+                 :class="['chat-list-item p-3 mb-2 cursor-pointer flex items-center',
+                         currentChatId === chat.id ? 'active' : '']">
+                <div class="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-900 flex items-center justify-center mr-3">
+                    <i class="fas fa-comment text-blue-500 dark:text-blue-300"></i>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <div class="font-medium text-gray-900 dark:text-gray-100 truncate text-sm">
+                        {{ chat.title }}
+                    </div>
+                    <div class="text-xs text-gray-500 dark:text-gray-400 truncate">
+                        {{ chat.preview }}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-auto pt-4 border-t border-gray-200 dark:border-gray-700">
+            <div class="flex items-center p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer"
+                 @click="toggleDarkMode">
+                <div class="w-8 h-8 rounded-lg bg-gray-100 dark:bg-gray-700 flex items-center justify-center mr-3">
+                    <i :class="darkMode ? 'fas fa-moon text-gray-600 dark:text-gray-300' : 'fas fa-sun text-gray-600 dark:text-gray-300'"></i>
+                </div>
+                <div class="font-medium text-gray-700 dark:text-gray-300">
+                    {{ darkMode ? '深色模式' : '浅色模式' }}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 主内容区域 -->
+    <div class="flex-1 flex flex-col h-full">
+        <!-- 聊天内容区域 -->
+        <main class="flex-1 overflow-y-auto p-6 main-content" ref="chatContainer">
+            <div v-if="messages.length === 0" class="max-w-3xl mx-auto h-full flex flex-col items-center justify-center">
+                <div class="welcome-card p-8 w-full max-w-2xl">
+                    <div class="text-center mb-8">
+                        <div class="w-20 h-20 rounded-2xl bg-gradient-to-r from-blue-500 to-indigo-500 flex items-center justify-center mx-auto mb-4">
+                            <i class="fas fa-compass text-white text-3xl"></i>
+                        </div>
+                        <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-2">侣行 - 您的智能出行管家</h1>
+                        <p class="text-gray-600 dark:text-gray-300">规划您的完美旅程，发现世界之美</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+                        <div class="feature-card p-4">
+                            <div class="flex items-center mb-3">
+                                <div class="capability-icon bg-blue-100 dark:bg-blue-900 text-blue-500 dark:text-blue-300 mr-3">
+                                    <i class="fas fa-map-marked-alt"></i>
+                                </div>
+                                <h3 class="font-semibold text-gray-900 dark:text-white">路线规划</h3>
+                            </div>
+                            <p class="text-sm text-gray-600 dark:text-gray-400">智能推荐最佳旅行路线，节省时间</p>
+                        </div>
+
+                        <div class="feature-card p-4">
+                            <div class="flex items-center mb-3">
+                                <div class="capability-icon bg-purple-100 dark:bg-purple-900 text-purple-500 dark:text-purple-300 mr-3">
+                                    <i class="fas fa-hotel"></i>
+                                </div>
+                                <h3 class="font-semibold text-gray-900 dark:text-white">酒店推荐</h3>
+                            </div>
+                            <p class="text-sm text-gray-600 dark:text-gray-400">根据预算推荐舒适住宿</p>
+                        </div>
+
+                        <div class="feature-card p-4">
+                            <div class="flex items-center mb-3">
+                                <div class="capability-icon bg-green-100 dark:bg-green-900 text-green-500 dark:text-green-300 mr-3">
+                                    <i class="fas fa-utensils"></i>
+                                </div>
+                                <h3 class="font-semibold text-gray-900 dark:text-white">美食指南</h3>
+                            </div>
+                            <p class="text-sm text-gray-600 dark:text-gray-400">发现当地特色美食和餐厅</p>
+                        </div>
+
+                        <div class="feature-card p-4">
+                            <div class="flex items-center mb-3">
+                                <div class="capability-icon bg-yellow-100 dark:bg-yellow-900 text-yellow-500 dark:text-yellow-300 mr-3">
+                                    <i class="fas fa-cloud-sun"></i>
+                                </div>
+                                <h3 class="font-semibold text-gray-900 dark:text-white">天气查询</h3>
+                            </div>
+                            <p class="text-sm text-gray-600 dark:text-gray-400">实时天气预报，出行无忧</p>
+                        </div>
+                    </div>
+
+                    <div class="text-center">
+                        <p class="text-gray-500 dark:text-gray-400 text-sm">
+                            <i class="fas fa-lightbulb text-yellow-500 mr-1"></i>
+                            提示：试着问"推荐5天的日本旅行路线"
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div v-else class="max-w-3xl mx-auto">
+                <div v-for="(message, index) in messages" :key="index" class="mb-6">
+                    <div :class="['flex', message.role === 'user' ? 'justify-end' : 'justify-start']">
+                        <div :class="['flex items-start max-w-full', message.role === 'user' ? 'flex-row-reverse' : '']">
+                            <div :class="['w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 mt-1',
+                                          message.role === 'user' ? 'avatar-user ml-3' : 'avatar-assistant mr-3']">
+                                <i :class="message.role === 'user' ? 'fas fa-user text-white' : 'fas fa-robot text-white'"></i>
+                            </div>
+                            <div :class="[message.role === 'user' ? 'message-user text-white' : 'message-assistant text-gray-800 dark:text-gray-100', 'px-4 py-3']">
+                                <div v-if="message.role === 'assistant' && message.isLoading" class="flex space-x-2">
+                                    <div :class="['w-2 h-2 rounded-full bg-gray-400 dark:bg-gray-500', 'animate-pulse']"></div>
+                                    <div :class="['w-2 h-2 rounded-full bg-gray-400 dark:bg-gray-500', 'animate-pulse delay-100']"></div>
+                                    <div :class="['w-2 h-2 rounded-full bg-gray-400 dark:bg-gray-500', 'animate-pulse delay-200']"></div>
+                                </div>
+                                <div v-else class="whitespace-pre-wrap">
+                                    <span v-for="(char, charIndex) in message.content" :key="charIndex"
+                                          :class="{'opacity-0': charIndex >= message.visibleChars, 'fade-in': charIndex < message.visibleChars}">
+                                        {{ char }}
+                                    </span>
+                                    <span v-if="message.isStreaming" class="typing-cursor"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- 输入框区域 -->
+        <footer class="p-4 border-t border-gray-200 dark:border-gray-700">
+            <div class="max-w-3xl mx-auto">
+                <div class="input-container flex items-end p-2">
+                    <textarea
+                        v-model="userInput"
+                        @keydown.enter.exact.prevent="sendMessage"
+                        @keydown.ctrl.enter.exact.prevent="sendMessage"
+                        @keydown.esc.exact="stopResponse"
+                        placeholder="输入您的问题... (例如: 推荐5天的日本旅行路线)"
+                        class="flex-1 py-2 px-4 focus:outline-none resize-none bg-transparent text-gray-900 dark:text-white max-h-32"
+                        rows="1"
+                        ref="textarea"
+                        @input="adjustTextareaHeight"
+                    ></textarea>
+                    <button
+                        @click="isLoading ? stopResponse() : sendMessage()"
+                        :disabled="!userInput.trim() && !isLoading"
+                        :class="['send-button flex items-center justify-center ml-2',
+                                isLoading ? 'bg-gradient-to-r from-red-500 to-orange-500' : '',
+                                'disabled:opacity-50 disabled:cursor-not-allowed']"
+                    >
+                        <i :class="isLoading ? 'fas fa-stop text-white' : 'fas fa-paper-plane text-white'"></i>
+                    </button>
+                </div>
+                <div class="text-xs text-gray-500 dark:text-gray-400 mt-2 text-center">
+                    侣行 - 您的智能出行管家 · 按 Enter 发送，按 Ctrl+Enter 换行
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <!-- 路况面板 -->
+    <div v-if="showTrafficPanel" class="traffic-panel">
+        <div class="p-4">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">实时路况信息</h3>
+                <button @click="showTrafficPanel = false" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <div v-if="trafficInfo" class="space-y-4">
+                <div class="grid grid-cols-3 gap-4 text-center">
+                    <div class="bg-blue-50 dark:bg-blue-900 p-3 rounded-lg">
+                        <div class="text-2xl font-bold text-blue-600 dark:text-blue-300">{{ Math.round(trafficInfo.totalDistance/1000) }}km</div>
+                        <div class="text-sm text-gray-600 dark:text-gray-300">总距离</div>
+                    </div>
+                    <div class="bg-green-50 dark:bg-green-900 p-3 rounded-lg">
+                        <div class="text-2xl font-bold text-green-600 dark:text-green-300">{{ Math.round(trafficInfo.totalDuration/60) }}分钟</div>
+                        <div class="text-sm text-gray-600 dark:text-gray-300">预计时间</div>
+                    </div>
+                    <div class="bg-yellow-50 dark:bg-yellow-900 p-3 rounded-lg">
+                        <div class="text-2xl font-bold text-yellow-600 dark:text-yellow-300">¥{{ trafficInfo.tolls }}</div>
+                        <div class="text-sm text-gray-600 dark:text-gray-300">过路费</div>
+                    </div>
+                </div>
+
+                <div id="traffic-map-container"></div>
+
+                <div class="space-y-2 max-h-60 overflow-y-auto">
+                    <div v-for="(step, index) in trafficInfo.steps" :key="index"
+                         :class="['p-3 rounded-lg border',
+                                 step.condition === '畅通' ? 'border-green-200 bg-green-50 dark:bg-green-900/30 dark:border-green-800' :
+                                 step.condition === '缓行' ? 'border-yellow-200 bg-yellow-50 dark:bg-yellow-900/30 dark:border-yellow-800' :
+                                 'border-red-200 bg-red-50 dark:bg-red-900/30 dark:border-red-800']">
+                        <div class="flex justify-between">
+                            <span class="font-medium text-gray-900 dark:text-white">{{ step.roadName || '未知道路' }}</span>
+                            <span :class="['px-2 py-1 rounded text-xs font-medium',
+                                          step.condition === '畅通' ? 'bg-green-100 text-green-800 dark:bg-green-800/50 dark:text-green-200' :
+                                          step.condition === '缓行' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-800/50 dark:text-yellow-200' :
+                                          'bg-red-100 text-red-800 dark:bg-red-800/50 dark:text-red-200']">
+                                {{ step.condition }}
+                            </span>
+                        </div>
+                        <div class="text-sm text-gray-600 dark:text-gray-300 mt-1">
+                            {{ step.distance }}米 · 约{{ Math.round(step.duration/60) }}分钟
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div v-else class="text-center py-8 text-gray-500 dark:text-gray-400">
+                <i class="fas fa-route fa-2x mb-2"></i>
+                <p>正在获取路况信息...</p>
+                <button @click="initTrafficDemo" class="mt-4 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">
+                    演示路况查询
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 天气面板 -->
+    <div v-if="showWeatherPanel" class="weather-panel">
+        <div class="p-4">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">实时天气信息</h3>
+                <button @click="showWeatherPanel = false" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <div v-if="weatherInfo" class="space-y-4">
+                <div class="text-center p-4 bg-gradient-to-r from-blue-400 to-blue-600 rounded-lg text-white">
+                    <div class="text-2xl font-bold">{{ weatherInfo.city }}</div>
+                    <div class="weather-icon">
+                        <i :class="getWeatherIcon(weatherInfo.weather)"></i>
+                    </div>
+                    <div class="text-4xl font-bold">{{ weatherInfo.temperature }}°C</div>
+                    <div class="text-lg">{{ weatherInfo.weather }}</div>
+                    <div class="text-sm opacity-80">{{ weatherInfo.winddirection }}风 {{ weatherInfo.windpower }}级</div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="bg-blue-50 dark:bg-blue-900/30 p-3 rounded-lg">
+                        <div class="text-sm text-gray-600 dark:text-gray-300">湿度</div>
+                        <div class="text-xl font-bold text-blue-600 dark:text-blue-300">{{ weatherInfo.humidity }}%</div>
+                    </div>
+                    <div class="bg-yellow-50 dark:bg-yellow-900/30 p-3 rounded-lg">
+                        <div class="text-sm text-gray-600 dark:text-gray-300">气压</div>
+                        <div class="text-xl font-bold text-yellow-600 dark:text-yellow-300">{{ weatherInfo.pressure }} hPa</div>
+                    </div>
+                </div>
+
+                <div class="bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
+                    <div class="text-sm text-gray-600 dark:text-gray-300 mb-2">未来几天预报</div>
+                    <div class="space-y-2">
+                        <div v-for="(forecast, index) in weatherInfo.forecasts" :key="index" class="flex justify-between items-center">
+                            <div class="text-gray-900 dark:text-white">{{ forecast.date }}</div>
+                            <div class="flex items-center">
+                                <i :class="[getWeatherIcon(forecast.dayweather), 'mr-2']"></i>
+                                <span class="text-gray-900 dark:text-white">{{ forecast.nighttemp }}°/{{ forecast.daytemp }}°</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div v-else class="text-center py-8 text-gray-500 dark:text-gray-400">
+                <i class="fas fa-cloud-sun fa-2x mb-2"></i>
+                <p>正在获取天气信息...</p>
+                <button @click="initWeatherDemo" class="mt-4 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">
+                    演示天气查询
+                </button>
+                <div class="mt-4">
+                    <input v-model="weatherCity" type="text" placeholder="输入城市名称"
+                           class="w-full px-3 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                    <button @click="getWeatherByCity(weatherCity)"
+                            class="mt-2 w-full px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600">
+                        查询天气
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const {createApp, ref, nextTick, onMounted, watch} = Vue;
+
+    createApp({
+        setup() {
+            const messages = ref([]);
+            const userInput = ref('');
+            const isLoading = ref(false);
+            const chatContainer = ref(null);
+            const textarea = ref(null);
+            const darkMode = ref(false);
+            const chatHistory = ref([
+                { id: '1', title: '日本旅行计划', preview: '我想去东京、大阪和京都...' },
+                { id: '2', title: '欧洲十日游', preview: '推荐意大利、法国和德国的行程...' },
+                { id: '3', title: '海岛度假推荐', preview: '马尔代夫和巴厘岛哪个更适合...' }
+            ]);
+            const currentChatId = ref('1');
+
+            const memoryId = ref(Date.now().toString());
+            let controller = null;
+            let typingInterval = null;
+
+            // 路况相关变量
+            const showTrafficPanel = ref(false);
+            const trafficInfo = ref(null);
+            const mapInstance = ref(null);
+            const trafficLayer = ref(null);
+            const trafficMonitoring = ref(null);
+
+            // 天气相关变量
+            const showWeatherPanel = ref(false);
+            const weatherInfo = ref(null);
+            const weatherCity = ref('北京');
+
+            // 调整文本区域高度
+            const adjustTextareaHeight = () => {
+                const textareaEl = textarea.value;
+                textareaEl.style.height = 'auto';
+                textareaEl.style.height = `${Math.min(textareaEl.scrollHeight, 200)}px`;
+            };
+
+            // 滚动到底部
+            const scrollToBottom = () => {
+                nextTick(() => {
+                    if (chatContainer.value) {
+                        chatContainer.value.scrollTop = chatContainer.value.scrollHeight;
+                    }
+                });
+            };
+
+            // 切换暗黑模式
+            const toggleDarkMode = () => {
+                darkMode.value = !darkMode.value;
+                localStorage.setItem('darkMode', darkMode.value);
+            };
+
+            // 新建会话
+            const startNewConversation = () => {
+                // 清空聊天记录
+                messages.value = [];
+                // 生成新的 memoryId
+                memoryId.value = Date.now().toString();
+                // 添加欢迎消息
+                messages.value.push({
+                    role: 'assistant',
+                    content: '您好！我是您的出行管家小智，可以帮您规划完美的旅行路线。请问您想去哪里旅行？有什么特别的需求吗？',
+                    isLoading: false,
+                    visibleChars: 0,
+                    isStreaming: false
+                });
+                // 确保欢迎消息完全可见
+                messages.value[0].visibleChars = messages.value[0].content.length;
+                // 滚动到底部
+                scrollToBottom();
+                // 聚焦输入框
+                nextTick(() => {
+                    textarea.value.focus();
+                });
+            };
+
+            // 加载历史对话
+            const loadChat = (id) => {
+                currentChatId.value = id;
+                // 这里应该从服务器加载对话历史
+                // 暂时模拟加载
+                messages.value = [];
+                messages.value.push({
+                    role: 'assistant',
+                    content: '您好！我是您的出行管家小智，可以帮您规划完美的旅行路线。请问您想去哪里旅行？有什么特别的需求吗？',
+                    isLoading: false,
+                    visibleChars: 0,
+                    isStreaming: false
+                });
+                messages.value[0].visibleChars = messages.value[0].content.length;
+                scrollToBottom();
+                nextTick(() => {
+                    textarea.value.focus();
+                });
+            };
+
+            // 模拟逐字打印效果
+            const startTypingEffect = (messageIndex) => {
+                const message = messages.value[messageIndex];
+                if (!message || message.visibleChars >= message.content.length) {
+                    clearInterval(typingInterval);
+                    typingInterval = null;
+                    messages.value[messageIndex].isStreaming = false;
+                    return;
+                }
+
+                messages.value[messageIndex].visibleChars++;
+                scrollToBottom();
+            };
+
+            // 发送消息
+            const sendMessage = async () => {
+                if (!userInput.value.trim() || isLoading.value) return;
+
+                // 检查是否是路况查询相关的问题
+                const trafficKeywords = ['路况', '交通状况', '堵车', '路线状况', '实时路况', '交通情况'];
+                const isTrafficQuery = trafficKeywords.some(keyword =>
+                    userInput.value.includes(keyword)
+                );
+
+                // 检查是否是天气查询相关的问题
+                const weatherKeywords = ['天气', '气温', '温度', '降水', '风力', '气象'];
+                const isWeatherQuery = weatherKeywords.some(keyword =>
+                    userInput.value.includes(keyword)
+                );
+
+                if (isTrafficQuery) {
+                    // 处理路况查询
+                    handleTrafficQuery(userInput.value.trim());
+                    return;
+                }
+
+                if (isWeatherQuery) {
+                    // 处理天气查询
+                    handleWeatherQuery(userInput.value.trim());
+                    return;
+                }
+
+                // 中止之前的请求
+                if (controller) {
+                    controller.abort();
+                }
+                controller = new AbortController();
+
+                const userMessage = {
+                    role: 'user',
+                    content: userInput.value.trim(),
+                    isLoading: false,
+                    visibleChars: userInput.value.trim().length,
+                    isStreaming: false
+                };
+
+                messages.value.push(userMessage);
+
+                const assistantMessage = {
+                    role: 'assistant',
+                    content: '',
+                    isLoading: true,
+                    visibleChars: 0,
+                    isStreaming: true
+                };
+
+                messages.value.push(assistantMessage);
+
+                userInput.value = '';
+                adjustTextareaHeight();
+                scrollToBottom();
+
+                isLoading.value = true;
+
+                try {
+                    const response = await fetch(`/chat?message=${encodeURIComponent(userMessage.content)}&memoryId=${memoryId.value}`, {
+                        signal: controller.signal
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+
+                    const reader = response.body.getReader();
+                    const decoder = new TextDecoder('utf-8');
+                    let buffer = '';
+                    let messageIndex = messages.value.length - 1;
+
+                    // 先清除之前的打字效果
+                    if (typingInterval) {
+                        clearInterval(typingInterval);
+                        typingInterval = null;
+                    }
+
+                    // 开始流式处理
+                    while (true) {
+                        const {done, value} = await reader.read();
+                        if (done) break;
+
+                        const chunk = decoder.decode(value, {stream: true});
+                        buffer += chunk;
+
+                        // 直接更新内容
+                        messages.value[messageIndex].content = buffer;
+                        messages.value[messageIndex].isLoading = false;
+
+                        // 启动打字效果
+                        if (!typingInterval) {
+                            typingInterval = setInterval(() => {
+                                startTypingEffect(messageIndex);
+                            }, 20); // 调整这个值可以改变打字速度
+                        }
+
+                        scrollToBottom();
+                    }
+
+                } catch (error) {
+                    if (error.name === 'AbortError') {
+                        console.log('请求被用户中止');
+                    } else {
+                        console.error('请求出错:', error);
+                        const lastMessage = messages.value[messages.value.length - 1];
+                        lastMessage.content = '抱歉，请求过程中出现错误: ' + error.message;
+                        lastMessage.visibleChars = lastMessage.content.length;
+                    }
+                } finally {
+                    const lastMessage = messages.value[messages.value.length - 1];
+                    lastMessage.isLoading = false;
+                    lastMessage.isStreaming = false;
+
+                    // 确保所有字符都可见
+                    if (lastMessage.visibleChars < lastMessage.content.length) {
+                        lastMessage.visibleChars = lastMessage.content.length;
+                    }
+
+                    isLoading.value = false;
+                    controller = null;
+
+                    if (typingInterval) {
+                        clearInterval(typingInterval);
+                        typingInterval = null;
+                    }
+
+                    scrollToBottom();
+                }
+            };
+
+            // 停止响应
+            const stopResponse = () => {
+                if (controller) {
+                    controller.abort();
+                    const lastMessage = messages.value[messages.value.length - 1];
+                    lastMessage.isLoading = false;
+                    lastMessage.isStreaming = false;
+
+                    if (lastMessage.visibleChars < lastMessage.content.length) {
+                        lastMessage.visibleChars = lastMessage.content.length;
+                    }
+
+                    isLoading.value = false;
+                    controller = null;
+
+                    if (typingInterval) {
+                        clearInterval(typingInterval);
+                        typingInterval = null;
+                    }
+                }
+            };
+
+            // 路况功能相关函数
+            const toggleTrafficPanel = () => {
+                showTrafficPanel.value = !showTrafficPanel.value;
+                if (showTrafficPanel.value) {
+                    nextTick(() => {
+                        initTrafficMap();
+                    });
+                }
+            };
+
+            // 初始化地图
+            const initTrafficMap = () => {
+                if (!mapInstance.value) {
+                    mapInstance.value = new AMap.Map('traffic-map-container', {
+                        resizeEnable: true,
+                        zoom: 11,
+                        center: [116.397428, 39.90923]
+                    });
+
+                    // 添加实时路况图层
+                    trafficLayer.value = new AMap.TileLayer.Traffic({
+                        zIndex: 10
+                    });
+                    trafficLayer.value.setMap(mapInstance.value);
+                }
+            };
+
+            // 获取路线的实时路况
+            const getRouteTraffic = async (origin, destination) => {
+                try {
+                    // 注意：这里需要替换为您的高德API密钥
+                    const response = await fetch(
+                        `https://restapi.amap.com/v3/direction/driving?origin=${origin}&destination=${destination}&key=9987e38d14aa093d3589f3102c562245&extensions=all`
+                    );
+                    const data = await response.json();
+
+                    if (data.status === "1" && data.route) {
+                        const paths = data.route.paths[0];
+                        const steps = paths.steps;
+
+                        // 处理路况信息
+                        const trafficData = steps.map(step => ({
+                            roadName: step.road || '未知道路',
+                            distance: step.distance,
+                            duration: step.duration,
+                            condition: getTrafficCondition(step.tmctype),
+                            tolls: step.tolls || 0,
+                            tollDistance: step.tollDistance || 0
+                        }));
+
+                        trafficInfo.value = {
+                            totalDistance: paths.distance,
+                            totalDuration: paths.duration,
+                            tolls: paths.tolls || 0,
+                            steps: trafficData
+                        };
+
+                        return trafficData;
+                    }
+                } catch (error) {
+                    console.error('获取路况信息失败:', error);
+                }
+            };
+
+            // 根据路况类型返回描述
+            const getTrafficCondition = (tmctype) => {
+                const conditionMap = {
+                    '快速路': '畅通',
+                    '主干道': '缓行',
+                    '次干道': '拥堵'
+                };
+                return conditionMap[tmctype] || '未知';
+            };
+
+            // 显示路况推送通知
+            const showTrafficNotification = (trafficData) => {
+                // 检查浏览器是否支持通知
+                if ("Notification" in window) {
+                    if (Notification.permission === "granted") {
+                        sendTrafficNotification(trafficData);
+                    } else if (Notification.permission !== "denied") {
+                        Notification.requestPermission().then(function (permission) {
+                            if (permission === "granted") {
+                                sendTrafficNotification(trafficData);
+                            }
+                        });
+                    }
+                }
+            };
+
+            // 发送路况通知
+            const sendTrafficNotification = (trafficData) => {
+                // 找出最拥堵的路段
+                const congestedRoads = trafficData.filter(item => item.condition === '拥堵');
+
+                if (congestedRoads.length > 0) {
+                    const notification = new Notification("路况提醒", {
+                        body: `检测到${congestedRoads.length}段拥堵路段，建议选择其他路线`,
+                        icon: "data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🚗</text></svg>"
+                    });
+
+                    notification.onclick = function() {
+                        showTrafficPanel.value = true;
+                        window.focus();
+                        this.close();
+                    };
+                }
+            };
+
+            // 开启实时路况监控
+            const startTrafficMonitoring = (origin, destination) => {
+                // 清除之前的监控
+                if (trafficMonitoring.value) {
+                    clearInterval(trafficMonitoring.value);
+                }
+
+                // 设置定时器定期获取路况信息
+                trafficMonitoring.value = setInterval(async () => {
+                    const trafficData = await getRouteTraffic(origin, destination);
+                    if (trafficData) {
+                        showTrafficNotification(trafficData);
+                    }
+                }, 300000); // 每5分钟检查一次
+            };
+
+            // 处理路况查询
+            const handleTrafficQuery = async (query) => {
+                // 添加用户消息
+                const userMessage = {
+                    role: 'user',
+                    content: query,
+                    isLoading: false,
+                    visibleChars: query.length,
+                    isStreaming: false
+                };
+                messages.value.push(userMessage);
+
+                // 添加助手回复
+                const assistantMessage = {
+                    role: 'assistant',
+                    content: '正在为您查询实时路况信息...',
+                    isLoading: true,
+                    visibleChars: 0,
+                    isStreaming: true
+                };
+                messages.value.push(assistantMessage);
+
+                scrollToBottom();
+
+                try {
+                    // 这里应该解析用户输入的起点和终点
+                    // 为了演示，我们使用固定坐标（北京到上海）
+                    const origin = "116.397428,39.90923"; // 北京
+                    const destination = "121.473701,31.230416"; // 上海
+
+                    const trafficData = await getRouteTraffic(origin, destination);
+
+                    if (trafficData) {
+                        // 显示路况面板
+                        showTrafficPanel.value = true;
+
+                        // 更新助手消息
+                        const lastMessage = messages.value[messages.value.length - 1];
+                        lastMessage.content = "已为您查询到实时路况信息，详情请查看右侧路况面板。";
+                        lastMessage.isLoading = false;
+                        lastMessage.isStreaming = false;
+                        lastMessage.visibleChars = lastMessage.content.length;
+
+                        // 显示通知
+                        showTrafficNotification(trafficData);
+
+                        // 开始监控路况变化
+                        startTrafficMonitoring(origin, destination);
+                    } else {
+                        const lastMessage = messages.value[messages.value.length - 1];
+                        lastMessage.content = "抱歉，无法获取实时路况信息，请稍后重试。";
+                        lastMessage.isLoading = false;
+                        lastMessage.isStreaming = false;
+                        lastMessage.visibleChars = lastMessage.content.length;
+                    }
+                } catch (error) {
+                    const lastMessage = messages.value[messages.value.length - 1];
+                    lastMessage.content = "查询路况时出现错误: " + error.message;
+                    lastMessage.isLoading = false;
+                    lastMessage.isStreaming = false;
+                    lastMessage.visibleChars = lastMessage.content.length;
+                }
+
+                scrollToBottom();
+            };
+
+            // 演示路况查询
+            const initTrafficDemo = async () => {
+                // 显示演示数据
+                trafficInfo.value = {
+                    totalDistance: "1200000",
+                    totalDuration: "43200",
+                    tolls: "500",
+                    steps: [
+                        {
+                            roadName: "京沪高速公路",
+                            distance: "800000",
+                            duration: "28800",
+                            condition: "缓行"
+                        },
+                        {
+                            roadName: "上海绕城高速",
+                            distance: "150000",
+                            duration: "7200",
+                            condition: "拥堵"
+                        },
+                        {
+                            roadName: "延安高架路",
+                            distance: "25000",
+                            duration: "3600",
+                            condition: "畅通"
+                        }
+                    ]
+                };
+
+                // 初始化地图
+                initTrafficMap();
+
+                // 在地图上添加路线标记
+                if (mapInstance.value) {
+                    // 添加起点标记
+                    const startMarker = new AMap.Marker({
+                        position: new AMap.LngLat(116.397428, 39.90923),
+                        title: '起点：北京'
+                    });
+                    mapInstance.value.add(startMarker);
+
+                    // 添加终点标记
+                    const endMarker = new AMap.Marker({
+                        position: new AMap.LngLat(121.473701, 31.230416),
+                        title: '终点：上海'
+                    });
+                    mapInstance.value.add(endMarker);
+
+                    // 设置地图中心点
+                    mapInstance.value.setCenter([118.9355645, 35.569823]);
+                }
+            };
+
+            // 天气功能相关函数
+            const toggleWeatherPanel = () => {
+                showWeatherPanel.value = !showWeatherPanel.value;
+                if (showWeatherPanel.value && !weatherInfo.value) {
+                    // 如果面板打开且没有天气信息，则获取默认城市天气
+                    getWeatherByCity('北京');
+                }
+            };
+
+            // 根据天气获取图标
+            const getWeatherIcon = (weather) => {
+                const weatherIcons = {
+                    '晴': 'fas fa-sun text-yellow-400',
+                    '多云': 'fas fa-cloud text-gray-400',
+                    '阴': 'fas fa-cloud text-gray-500',
+                    '阵雨': 'fas fa-cloud-rain text-blue-400',
+                    '雷阵雨': 'fas fa-bolt text-yellow-500',
+                    '小雨': 'fas fa-cloud-sun-rain text-blue-400',
+                    '中雨': 'fas fa-cloud-rain text-blue-500',
+                    '大雨': 'fas fa-cloud-showers-heavy text-blue-600',
+                    '暴雨': 'fas fa-cloud-showers-heavy text-blue-800',
+                    '雪': 'fas fa-snowflake text-blue-300',
+                    '雾': 'fas fa-smog text-gray-400',
+                    'default': 'fas fa-cloud-sun'
+                };
+
+                for (const [key, icon] of Object.entries(weatherIcons)) {
+                    if (weather.includes(key)) {
+                        return icon;
+                    }
+                }
+                return weatherIcons['default'];
+            };
+
+            // 获取指定城市的天气信息
+            const getWeatherByCity = async (city) => {
+                try {
+                    // 注意：这里需要替换为您的高德API密钥
+                    const response = await fetch(
+                        `https://restapi.amap.com/v3/weather/weatherInfo?city=${encodeURIComponent(city)}&key=9987e38d14aa093d3589f3102c562245`
+                    );
+                    const data = await response.json();
+
+                    if (data.status === "1" && data.lives && data.lives.length > 0) {
+                        const live = data.lives[0];
+
+                        // 获取预报信息
+                        const forecastResponse = await fetch(
+                            `https://restapi.amap.com/v3/weather/weatherInfo?city=${encodeURIComponent(city)}&extensions=all&key=9987e38d14aa093d3589f3102c562245`
+                        );
+                        const forecastData = await forecastResponse.json();
+
+                        let forecasts = [];
+                        if (forecastData.forecasts && forecastData.forecasts.length > 0) {
+                            forecasts = forecastData.forecasts[0].casts.slice(0, 4); // 取4天预报
+                        }
+
+                        weatherInfo.value = {
+                            city: live.city,
+                            temperature: live.temperature,
+                            humidity: live.humidity,
+                            weather: live.weather,
+                            winddirection: live.winddirection,
+                            windpower: live.windpower,
+                            pressure: live.pressure,
+                            reporttime: live.reporttime,
+                            forecasts: forecasts
+                        };
+
+                        return weatherInfo.value;
+                    }
+                } catch (error) {
+                    console.error('获取天气信息失败:', error);
+                }
+            };
+
+            // 处理天气查询
+            const handleWeatherQuery = async (query) => {
+                // 添加用户消息
+                const userMessage = {
+                    role: 'user',
+                    content: query,
+                    isLoading: false,
+                    visibleChars: query.length,
+                    isStreaming: false
+                };
+                messages.value.push(userMessage);
+
+                // 添加助手回复
+                const assistantMessage = {
+                    role: 'assistant',
+                    content: '正在为您查询天气信息...',
+                    isLoading: true,
+                    visibleChars: 0,
+                    isStreaming: true
+                };
+                messages.value.push(assistantMessage);
+
+                scrollToBottom();
+
+                try {
+                    // 解析用户输入的城市名
+                    let city = '北京'; // 默认城市
+
+                    // 简单的城市名提取逻辑
+                    const cityKeywords = ['北京', '上海', '广州', '深圳', '杭州', '南京', '成都', '重庆', '武汉', '西安'];
+                    for (const keyword of cityKeywords) {
+                        if (query.includes(keyword)) {
+                            city = keyword;
+                            break;
+                        }
+                    }
+
+                    const weatherData = await getWeatherByCity(city);
+
+                    if (weatherData) {
+                        // 显示天气面板
+                        showWeatherPanel.value = true;
+
+                        // 更新助手消息
+                        const lastMessage = messages.value[messages.value.length - 1];
+                        lastMessage.content = `已为您查询到${city}的天气信息：${weatherData.weather}，温度${weatherData.temperature}°C，详情请查看右侧天气面板。`;
+                        lastMessage.isLoading = false;
+                        lastMessage.isStreaming = false;
+                        lastMessage.visibleChars = lastMessage.content.length;
+                    } else {
+                        const lastMessage = messages.value[messages.value.length - 1];
+                        lastMessage.content = "抱歉，无法获取天气信息，请稍后重试。";
+                        lastMessage.isLoading = false;
+                        lastMessage.isStreaming = false;
+                        lastMessage.visibleChars = lastMessage.content.length;
+                    }
+                } catch (error) {
+                    const lastMessage = messages.value[messages.value.length - 1];
+                    lastMessage.content = "查询天气时出现错误: " + error.message;
+                    lastMessage.isLoading = false;
+                    lastMessage.isStreaming = false;
+                    lastMessage.visibleChars = lastMessage.content.length;
+                }
+
+                scrollToBottom();
+            };
+
+            // 演示天气查询
+            const initWeatherDemo = async () => {
+                // 显示演示数据
+                weatherInfo.value = {
+                    city: "北京",
+                    temperature: "22",
+                    humidity: "65",
+                    weather: "晴",
+                    winddirection: "北",
+                    windpower: "3",
+                    pressure: "1013",
+                    reporttime: "2023-06-15 14:00:00",
+                    forecasts: [
+                        {
+                            date: "今天",
+                            dayweather: "晴",
+                            nighttemp: "18",
+                            daytemp: "28"
+                        },
+                        {
+                            date: "明天",
+                            dayweather: "多云",
+                            nighttemp: "19",
+                            daytemp: "27"
+                        },
+                        {
+                            date: "后天",
+                            dayweather: "阵雨",
+                            nighttemp: "17",
+                            daytemp: "24"
+                        },
+                        {
+                            date: "周四",
+                            dayweather: "阴",
+                            nighttemp: "16",
+                            daytemp: "23"
+                        }
+                    ]
+                };
+            };
+
+            // 初始化
+            onMounted(() => {
+                // 检查暗黑模式偏好
+                darkMode.value = localStorage.getItem('darkMode') === 'true' ||
+                    (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+
+                // 添加欢迎消息
+                messages.value.push({
+                    role: 'assistant',
+                    content: '您好！我是您的出行管家小智，可以帮您规划完美的旅行路线。请问您想去哪里旅行？有什么特别的需求吗？',
+                    isLoading: false,
+                    visibleChars: 0,
+                    isStreaming: false
+                });
+
+                // 确保欢迎消息完全可见
+                messages.value[0].visibleChars = messages.value[0].content.length;
+                scrollToBottom();
+
+                // 聚焦输入框
+                nextTick(() => {
+                    textarea.value.focus();
+                });
+            });
+
+            // 监听消息变化自动滚动
+            watch(messages, scrollToBottom, {deep: true});
+
+            return {
+                messages,
+                userInput,
+                isLoading,
+                darkMode,
+                chatContainer,
+                textarea,
+                chatHistory,
+                currentChatId,
+                sendMessage,
+                stopResponse,
+                toggleDarkMode,
+                adjustTextareaHeight,
+                startNewConversation,
+                loadChat,
+                // 路况相关返回值
+                showTrafficPanel,
+                trafficInfo,
+                toggleTrafficPanel,
+                initTrafficDemo,
+                // 天气相关返回值
+                showWeatherPanel,
+                weatherInfo,
+                weatherCity,
+                toggleWeatherPanel,
+                getWeatherByCity,
+                initWeatherDemo,
+                getWeatherIcon
+            };
+        }
+    }).mount('#app');
+</script>
+</body>
+</html>
