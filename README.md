@@ -66,3 +66,11 @@ java -jar target/consultant-0.0.1-SNAPSHOT.jar
 
 联系方式
 如有问题或建议，请联系：[19935809799@163.com]
+
+
+
+
+
+运行效果：
+<img width="2235" height="1272" alt="7add98a7-2af7-41d3-88dd-3b1c7193c5de" src="https://github.com/user-attachments/assets/2f71c93b-f240-48bc-bd68-668d3f5aca77" />
+
